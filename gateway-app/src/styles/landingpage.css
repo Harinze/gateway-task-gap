@@ -1,0 +1,137 @@
+/* UserList.css */
+
+.user-list-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.user-list-title {
+    font-size: 24px;
+    color: #34d399;
+    /* Dark teal text color */
+}
+
+.button-container {
+    display: flex;
+    gap: 10px;
+}
+
+.register-button,
+.login-button {
+    background-color: #34d399;
+    /* Dark teal background color */
+    color: #ffffff;
+    /* White text color */
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.register-button:hover,
+.login-button:hover {
+    background-color: #34d399;
+    /* Darker teal on hover */
+}
+
+.user-list {
+    margin-bottom: 20px;
+}
+
+.user-list-item {
+    font-size: 20px;
+    color: #34d399;
+    /* Dark teal text color */
+}
+
+.list-none {
+    list-style: none;
+    padding: 0;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.hover-text-blue:hover {
+    color: #006666;
+    /* Darker teal on hover */
+}
+
+.user-details {
+    margin-top: 20px;
+}
+
+/* Responsive Styles */
+
+@media (max-width: 768px) {
+    .header-container {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .button-container {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+
+/* Go back home button */
+
+.go-back-button {
+    display: block;
+    margin-top: 10px;
+    text-align: center;
+    text-decoration: none;
+    background-color: #34d399;
+    color: #ffffff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.go-back-button:hover {
+    background-color: #004d00;
+}
+
+.user-table,
+.user-details-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.user-table th,
+.user-table td,
+.user-details-table th,
+.user-details-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.user-table th,
+.user-details-table th {
+    background-color: #34d399;
+    color: #ffffff;
+}
+
+ul {
+    list-style-type: none;
+    /* Remove bullets */
+    padding: 0;
+    /* Remove padding */
+    margin: 0;
+    /* Remove margins */
+}

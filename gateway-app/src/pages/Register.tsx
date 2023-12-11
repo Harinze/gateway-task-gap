@@ -1,138 +1,98 @@
-"use client";
-import React, { useState } from "react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import "../styles/register.css";
-import "../styles/index.css";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import "../styles/landingpage.css";
+import Header from "../components/header";
 
-const RegisterGateway: React.FC = () => {
-  const [values, setValues] = useState({
-    serialNumber: "",
-    name: "",
-    ipAddress: "",
-  });
+interface Device {
+  uid: string;
+  vendor: string;
+  createdAt: string;
+}
 
-  const [submitted, setSubmitted] = useState(false);
-  const [valid, setValid] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+interface UserData {
+  devices: Device[];
+  name: string;
+  ipAddress: string;
+  uid: string;
+  vendor: string;
+  createdAt: string;
+}
 
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = event.target;
-    setValues((prevValues) => ({
-      ...prevValues,
-      [name]: value,
-    }));
-  };
+const UserList: React.FC = () => {
+  const [users, setUsers] = useState<UserData[]>([]);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsLoading(true);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch("http://localhost:8050/getalldata");
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        const data = await response.json();
 
-    try {
-      const response = await fetch("", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(values),
-      });
-
-      if (response.ok) {
-        toast.success("Registration successful");
-        setValid(true);
-        // Redirect to the home page after successful registration
-      } else {
-        // Display a generic error message if registration fails
-        toast.error("Registration failed");
+        // Check if the data is an array
+        if (Array.isArray(data)) {
+          setUsers(data);
+        } else {
+          console.error("API response is not an array:", data);
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
       }
+    };
 
-      setSubmitted(true);
-    } catch (error) {
-      console.error("Error during registration:", error);
-      // Display a generic error message if an unexpected error occurs
-      toast.error("An error occurred during registration.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    fetchData();
+  }, []);
 
   return (
-    <div>
-      <ToastContainer
-        position="top-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-      />
-      <div className="register-container">
-        <div className="form-container">
-          <Link to="/" className="home-link" >
-            Back to Home
-          </Link>
-          <form className="register-form" onSubmit={handleSubmit}>
-            {isLoading && <p>Loading...</p>}
-            {submitted && valid && (
-              <div className="success-message">
-                <h3> Welcome {values.name} </h3>
-                <div> Your registration was successful! </div>
-              </div>
-            )}
-            {/* Remove error handling */}
-            {!valid && (
-              <input
-                className="form-field"
-                type="text"
-                placeholder="Serial Number"
-                name="serialNumber"
-                value={values.serialNumber}
-                onChange={handleInputChange}
-              />
-            )}
-            {submitted && !values.serialNumber && (
-              <span id="serial-number-error">Please enter a serial number</span>
-            )}
-            {!valid && (
-              <input
-                className="form-field"
-                type="text"
-                placeholder="Name"
-                name="name"
-                value={values.name}
-                onChange={handleInputChange}
-              />
-            )}
-            {submitted && !values.name && (
-              <span id="name-error">Please enter a name</span>
-            )}
-            {!valid && (
-              <input
-                className="form-field"
-                type="text"
-                placeholder="IPv4 address"
-                name="ipAddress"
-                value={values.ipAddress}
-                onChange={handleInputChange}
-              />
-            )}
-            {submitted && !values.ipAddress && (
-              <span id="ip-address-error">Please enter a valid IP address</span>
-            )}
-            {!valid && (
-              <button className="form-field" type="submit">
-                Register a gateway
-              </button>
-            )}
-          </form>
+    <>
+      <Header />
+      <div className="user-list-container">
+        <div className="header-container">
+          <h1 className="user-list-title">User Information</h1>
+          <div className="button-container">
+            <Link to="/register" className="register-button">
+              Register a Gateway
+            </Link>
+            <Link to="/login" className="login-button">
+              Get Access to Edit
+            </Link>
+          </div>
+        </div>
+
+        <div className="user-list">
+          <h2 className="user-list-item">All Users:</h2>
+          <table className="user-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>IPv4 Address</th>
+                <th>UID</th>
+                <th>Vendor</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((user, index) => (
+                <tr key={index} className="hover-text-blue">
+                  <td>{user.name}</td>
+                  <td>{user.ipAddress}</td>
+                  {user.devices.map((device, deviceIndex) => (
+                    <React.Fragment key={deviceIndex}>
+                      <td>{device.uid}</td>
+                      <td>{device.vendor}</td>
+                      <td>{device.createdAt}</td>
+                    </React.Fragment>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
-export default RegisterGateway;
+export default UserList;

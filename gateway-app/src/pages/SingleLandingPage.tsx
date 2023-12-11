@@ -1,8 +1,7 @@
-"use client";
+
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import "../styles/home.css"; // Import your styles
-import "../styles/index.css";
+import "../styles/home.css"; 
 import Header from "../components/header";
 
 
@@ -11,16 +10,16 @@ const UserList: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
-  // Sample user data structure
+  
   interface User {
     id: number;
     username: string;
     email: string;
-    // Add other user information as needed
+    
   }
 
   useEffect(() => {
-    // Fetch user data from the backend (replace with your actual API call)
+    
     const fetchData = async () => {
       try {
         const response = await fetch("your_backend_api/users");
@@ -32,7 +31,7 @@ const UserList: React.FC = () => {
     };
 
     fetchData();
-  }, []); // Fetch data on component mount
+  }, []); 
 
   const handleUserClick = (user: User) => {
     setSelectedUser(user);
@@ -77,8 +76,7 @@ const UserList: React.FC = () => {
             <h2 className="user-list-item">User Details:</h2>
             <p>ID: {selectedUser.id}</p>
             <p>Username: {selectedUser.username}</p>
-            <p>Email: {selectedUser.email}</p>
-            {/* Display additional user information as needed */}
+            
           </div>
         )}
       </div>
