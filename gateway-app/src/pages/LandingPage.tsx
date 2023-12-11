@@ -151,7 +151,9 @@ const UserList: React.FC = () => {
 
   const fetchData = async () => {
     try {
-      const response = await fetch("http://localhost:8050/getalldata");
+      const response = await fetch(
+        "https://gateway-1yc2.onrender.com/getalldata"
+      );
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }

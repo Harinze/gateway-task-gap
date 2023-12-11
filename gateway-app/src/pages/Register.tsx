@@ -25,7 +25,9 @@ const UserList: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("http://localhost:8050/getalldata");
+        const response = await fetch(
+          "https://gateway-1yc2.onrender.com/register"
+        );
         if (!response.ok) {
           throw new Error("Network response was not ok");
         }
