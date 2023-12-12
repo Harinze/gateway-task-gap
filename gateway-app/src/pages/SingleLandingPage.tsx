@@ -1,40 +1,81 @@
-
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import "../styles/home.css"; 
+import "../styles/index.css";
 import Header from "../components/header";
 
+interface Device {
+  uid: number;
+  vendor: string;
+  createdAt: string;
+}
+
+interface UserData {
+  createdAt: string;
+  _id: string;
+  serialNumber: string;
+  name: string;
+  ipAddress: string;
+  status: boolean;
+  devices: Device[];
+  updatedAt: string;
+}
 
 const UserList: React.FC = () => {
- 
-  const [users, setUsers] = useState<User[]>([]);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-
-  
-  interface User {
-    id: number;
-    username: string;
-    email: string;
-    
-  }
+  const [users, setUsers] = useState<UserData[]>([]);
+  const [inputSerialNumber, setInputSerialNumber] = useState("");
+  const [foundUser, setFoundUser] = useState<UserData | null>(null);
 
   useEffect(() => {
-    
-    const fetchData = async () => {
+    const fetchDataAndCache = async () => {
       try {
-        const response = await fetch("your_backend_api/users");
+        const response = await fetch(
+          "https://gateway-1yc2.onrender.com/getalldata"
+        );
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
         const data = await response.json();
-        setUsers(data);
+        console.log("response", response);
+
+        if (Array.isArray(data)) {
+          localStorage.setItem("userListData", JSON.stringify(data));
+          setUsers(data);
+        } else {
+          console.error("API response is not the expected format:", data);
+        }
       } catch (error) {
         console.error("Error fetching user data:", error);
       }
     };
 
-    fetchData();
-  }, []); 
+    const intervalId = setInterval(fetchDataAndCache, 10 * 60 * 10000);
 
-  const handleUserClick = (user: User) => {
-    setSelectedUser(user);
+    fetchDataAndCache();
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, []);
+
+  const handleSearch = () => {
+    console.log("Searching for serial number:", inputSerialNumber);
+
+    const storedData = localStorage.getItem("userListData");
+    const usersFromLocalStorage = storedData ? JSON.parse(storedData) : [];
+
+    const user = usersFromLocalStorage.find(
+      (userData: { serialNumber: string; }) => userData.serialNumber === inputSerialNumber
+    );
+
+    if (user) {
+      setFoundUser(user);
+    } else {
+      console.log("User not found");
+    }
+  };
+
+  const closeModal = () => {
+    setFoundUser(null);
   };
 
   return (
@@ -47,36 +88,82 @@ const UserList: React.FC = () => {
             <Link to="/register" className="register-button">
               Register a Gateway
             </Link>
-            <Link
-              to="/login"
-              className="login-button"
-            >
-              Get Access to Edit
+            <Link to="/login" className="login-button">
+              Add Device
             </Link>
+          </div>
+          <div className="search-container">
+            <input
+              type="text"
+              placeholder="Enter Serial Number"
+              value={inputSerialNumber}
+              onChange={(e) => setInputSerialNumber(e.target.value)}
+            />
+            <button onClick={handleSearch}>Search</button>
           </div>
         </div>
 
         <div className="user-list">
           <h2 className="user-list-item">All Users:</h2>
-          <ul className="list-none">
-            {users.map((user) => (
-              <li
-                key={user.id}
-                onClick={() => handleUserClick(user)}
-                className="cursor-pointer hover-text-blue"
-              >
-                {user.username}
-              </li>
-            ))}
-          </ul>
+          <table className="user-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>IP Address</th>
+                <th>Status</th>
+                <th>Devices</th>
+                <th>Updated At</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((user, index) => (
+                <tr key={index}>
+                  <td>{user.name}</td>
+                  <td>{user.ipAddress}</td>
+                  <td>
+                    {user.status ? "Can't add device" : "Add more device(s)"}
+                  </td>
+                  <td>
+                    <ul>
+                      {user.devices.map((device, index) => (
+                        <li key={index}>
+                          UID: {device.uid}, Vendor: {device.vendor}, Created
+                          At: {device.createdAt}
+                        </li>
+                      ))}
+                    </ul>
+                  </td>
+                  <td>{user.updatedAt}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
 
-        {selectedUser && (
-          <div className="user-details">
-            <h2 className="user-list-item">User Details:</h2>
-            <p>ID: {selectedUser.id}</p>
-            <p>Username: {selectedUser.username}</p>
-            
+        {foundUser && (
+          <div className="modal-overlay" onClick={closeModal}>
+            <div className="modal" onClick={(e) => e.stopPropagation()}>
+              <span className="close-btn" onClick={closeModal}>
+                &times;
+              </span>
+              <h2>User Details</h2>
+              <p>Name: {foundUser.name}</p>
+              <p>IP Address: {foundUser.ipAddress}</p>
+              <p>
+                Status:{" "}
+                {foundUser.status ? "Can't add device" : "Add more device(s)"}
+              </p>
+              <p>Updated At: {foundUser.updatedAt}</p>
+              <p>Devices:</p>
+              <ul>
+                {foundUser.devices.map((device, index) => (
+                  <li key={index}>
+                    UID: {device.uid}, Vendor: {device.vendor}, Created At:{" "}
+                    {device.createdAt}
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         )}
       </div>
