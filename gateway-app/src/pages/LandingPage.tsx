@@ -1,12 +1,12 @@
+
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import "../styles/index.css";
+import "../styles/index.css"; 
 import Header from "../components/header";
 
 interface Device {
   uid: number;
   vendor: string;
-  createdAt: string;
 }
 
 interface UserData {
@@ -17,14 +17,18 @@ interface UserData {
   ipAddress: string;
   status: boolean;
   devices: Device[];
-  updatedAt: string;
 }
+
+const ITEMS_PER_PAGE = 5; 
 
 const UserList: React.FC = () => {
   const [users, setUsers] = useState<UserData[]>([]);
   const [inputSerialNumber, setInputSerialNumber] = useState("");
   const [foundUser, setFoundUser] = useState<UserData | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     const fetchDataAndCache = async () => {
@@ -36,9 +40,10 @@ const UserList: React.FC = () => {
           throw new Error("Network response was not ok");
         }
         const data = await response.json();
-        console.log("response", response);
 
-        if (Array.isArray(data)) {
+        console.log("Fetched data:", data);
+
+        if (Array.isArray(data) && data.length > 0) {
           localStorage.setItem("userListData", JSON.stringify(data));
           setUsers(data);
         } else {
@@ -49,9 +54,9 @@ const UserList: React.FC = () => {
       }
     };
 
-    const intervalId = setInterval(fetchDataAndCache, 10 * 60 * 10000);
+    fetchDataAndCache(); // Initial fetch
 
-    fetchDataAndCache();
+    const intervalId = setInterval(fetchDataAndCache, 10 * 60 * 1000);
 
     return () => {
       clearInterval(intervalId);
@@ -59,21 +64,24 @@ const UserList: React.FC = () => {
   }, []);
 
   const handleSearch = () => {
-    if (!inputSerialNumber) {
-      setError("Please enter a serial number.");
+    if (!inputSerialNumber.trim()) {
+      setError("Please enter a serial number");
       return;
     }
 
     const storedData = localStorage.getItem("userListData");
-    const usersFromLocalStorage = storedData ? JSON.parse(storedData) : [];
+    const usersFromLocalStorage: UserData[] = storedData
+      ? JSON.parse(storedData)
+      : [];
 
     const user = usersFromLocalStorage.find(
-      (userData: { serialNumber: string; }) => userData.serialNumber === inputSerialNumber
+      (userData: { serialNumber: string }) =>
+        userData.serialNumber === inputSerialNumber
     );
 
     if (user) {
       setFoundUser(user);
-      setError(null);
+      setError(null); 
     } else {
       setFoundUser(null);
       setError("User not found");
@@ -82,6 +90,20 @@ const UserList: React.FC = () => {
 
   const closeModal = () => {
     setFoundUser(null);
+    setError(null); 
+  };
+
+  const clearError = () => {
+    setError(null);
+  };
+
+  // Pagination functions
+  const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
+  const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
+  const currentItems = users.slice(indexOfFirstItem, indexOfLastItem);
+
+  const paginate = (pageNumber: number) => {
+    setCurrentPage(pageNumber);
   };
 
   return (
@@ -94,7 +116,7 @@ const UserList: React.FC = () => {
             <Link to="/register" className="register-button">
               Register a Gateway
             </Link>
-            <Link to="/login" className="login-button">
+            <Link to="/adddevice" className="login-button">
               Add Device
             </Link>
           </div>
@@ -104,12 +126,13 @@ const UserList: React.FC = () => {
               placeholder="Enter Serial Number"
               value={inputSerialNumber}
               onChange={(e) => setInputSerialNumber(e.target.value)}
+              onClick={clearError} 
             />
             <button onClick={handleSearch}>Search</button>
           </div>
         </div>
 
-        {error && <p style={{ color: "red" }}>{error}</p>}
+        {error && <p className="error-message">{error}</p>}
 
         <div className="user-list">
           <h2 className="user-list-item">All Users:</h2>
@@ -120,11 +143,11 @@ const UserList: React.FC = () => {
                 <th>IP Address</th>
                 <th>Status</th>
                 <th>Devices</th>
-                <th>Updated At</th>
+                <th>Created At</th>
               </tr>
             </thead>
             <tbody>
-              {users.map((user, index) => (
+              {currentItems.map((user, index) => (
                 <tr key={index}>
                   <td>{user.name}</td>
                   <td>{user.ipAddress}</td>
@@ -133,19 +156,33 @@ const UserList: React.FC = () => {
                   </td>
                   <td>
                     <ul>
-                      {user.devices.map((device, index) => (
-                        <li key={index}>
-                          UID: {device.uid}, Vendor: {device.vendor}, Created
-                          At: {device.createdAt}
+                      {user.devices.map((device, deviceIndex) => (
+                        <li key={deviceIndex}>
+                          UID: {device.uid}, Vendor: {device.vendor}
                         </li>
                       ))}
                     </ul>
                   </td>
-                  <td>{user.updatedAt}</td>
+                  <td>{user.createdAt}</td>
                 </tr>
               ))}
             </tbody>
           </table>
+
+          {/* Pagination */}
+          <ul className="pagination">
+            {Array.from({
+              length: Math.ceil(users.length / ITEMS_PER_PAGE),
+            }).map((_, index) => (
+              <li
+                key={index}
+                onClick={() => paginate(index + 1)}
+                className={currentPage === index + 1 ? "active" : ""}
+              >
+                {index + 1}
+              </li>
+            ))}
+          </ul>
         </div>
 
         {foundUser && (
@@ -161,13 +198,12 @@ const UserList: React.FC = () => {
                 Status:{" "}
                 {foundUser.status ? "Can't add device" : "Add more device(s)"}
               </p>
-              <p>Updated At: {foundUser.updatedAt}</p>
+              <p>Created At: {foundUser.createdAt}</p>
               <p>Devices:</p>
               <ul>
-                {foundUser.devices.map((device, index) => (
-                  <li key={index}>
-                    UID: {device.uid}, Vendor: {device.vendor}, Created At:{" "}
-                    {device.createdAt}
+                {foundUser.devices.map((device, deviceIndex) => (
+                  <li key={deviceIndex}>
+                    UID: {device.uid}, Vendor: {device.vendor}
                   </li>
                 ))}
               </ul>

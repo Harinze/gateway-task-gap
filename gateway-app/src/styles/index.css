@@ -1,8 +1,4 @@
-/* UserList.css */
 
-/* ... (previous styles) */
-
-/* UserList.css */
 
 .user-list-container {
     max-width: 1200px;
@@ -198,4 +194,53 @@ ul {
     color: #555;
 }
 
-/* ... (remaining styles) */
+.modify-details-button {
+    padding: 10px 20px;
+    background-color: #34d399;
+    /* Green background color */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-right: 10px;
+    /* Adjust margin as needed */
+}
+
+.modify-details-button:hover {
+    background-color: #004d00;
+    /* Darker green on hover */
+}
+
+.user-list-container .user-table td ul li strong {
+    font-weight: bold;
+}
+
+
+     /* PAGINATION  */
+
+.pagination {
+    list-style: none;
+    display: flex;
+    margin: 20px 0;
+    padding: 0;
+    justify-content: center;
+}
+
+.pagination li {
+    cursor: pointer;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    margin-right: 5px;
+}
+
+.pagination li.active {
+    background-color: #34d399;
+    color: #fff;
+}
+
+.error-message {
+    color: #ff0000;
+    /* Red color for error messages */
+    margin-top: 8px;
+    /* Add some space at the top of the error message */
+}
