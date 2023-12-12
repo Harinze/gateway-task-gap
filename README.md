@@ -64,6 +64,10 @@ npm run build
 
 npm run test
 ```
+## Deployment links
+- https://trackgateway.netlify.app/ - frontend
+- https://gateway-1yc2.onrender.com - backend
+
 
  
 
