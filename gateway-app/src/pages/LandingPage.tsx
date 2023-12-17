@@ -6,6 +6,7 @@ import Header from "../components/header";
 interface Device {
   uid: number;
   vendor: string;
+  createdAt: string; 
 }
 
 interface UserData {
@@ -38,38 +39,45 @@ const UserList: React.FC = () => {
     return date.toLocaleDateString(undefined, options);
   };
 
-  useEffect(() => {
-    const fetchDataAndCache = async () => {
-      try {
-        const response = await fetch(
-          "https://gateway-1yc2.onrender.com/getalldata"
-        );
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
-        const data = await response.json();
-
-        if (Array.isArray(data) && data.length > 0) {
-          // Initialize lastStatusUpdate with the current time for each user
-          const usersWithTimestamp = data.map((user: UserData) => ({
-            ...user,
-            lastStatusUpdate: new Date().getTime(),
-          }));
-
-          localStorage.setItem(
-            "userListData",
-            JSON.stringify(usersWithTimestamp)
-          );
-          setUsers(usersWithTimestamp);
-        } else {
-          console.error("API response is not the expected format:", data);
-        }
-      } catch (error) {
-        console.error("Error fetching user data:", error);
+  const fetchDataAndCache = async () => {
+    try {
+      const response = await fetch(
+        "https://gateway-1yc2.onrender.com/getalldata"
+      );
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
       }
-    };
 
-    fetchDataAndCache(); 
+      const items = await response.json();
+      
+      const data = [...items].reverse();
+
+      if (Array.isArray(data) && data.length > 0) {
+        // Initialize lastStatusUpdate with the current time for each user
+        const usersWithTimestamp = data.map((user: UserData) => ({
+          ...user,
+          lastStatusUpdate: new Date().getTime(),
+          devices: user.devices.map((device: Device) => ({
+            ...device,
+            createdAt: new Date().toISOString(), 
+          })),
+        }));
+
+        localStorage.setItem(
+          "userListData",
+          JSON.stringify(usersWithTimestamp)
+        );
+        setUsers(usersWithTimestamp);
+      } else {
+        console.error("API response is not the expected format:", data);
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchDataAndCache();
   }, []);
 
   const handleSearch = () => {
@@ -177,7 +185,10 @@ const UserList: React.FC = () => {
                         <li key={deviceIndex}>
                           <div>
                             <span>UID: {device.uid}</span>{" "}
-                            <span>Vendor: {device.vendor}</span>
+                            <span>Vendor: {device.vendor}</span>{" "}
+                            <span>
+                              Created At: {formatDate(device.createdAt)}
+                            </span>
                           </div>
                         </li>
                       ))}
@@ -222,7 +233,8 @@ const UserList: React.FC = () => {
                   <li key={deviceIndex}>
                     <div>
                       <span>UID: {device.uid}</span>
-                      <span>Vendor: {device.vendor}</span>
+                      <span>Vendor: {device.vendor}</span>{" "}
+                      <span>Created At: {formatDate(device.createdAt)}</span>
                     </div>
                   </li>
                 ))}
@@ -236,3 +248,5 @@ const UserList: React.FC = () => {
 };
 
 export default UserList;
+
+

@@ -16,7 +16,7 @@
 .user-list-title {
     font-size: 24px;
     color: #34d399;
-    /* Dark teal text color */
+
 }
 
 .button-container {
@@ -27,7 +27,6 @@
 .register-button,
 .login-button {
     background-color: #34d399;
-    /* Dark teal background color */
     color: #ffffff;
     /* White text color */
     padding: 10px 20px;
@@ -40,7 +39,7 @@
 .register-button:hover,
 .login-button:hover {
     background-color: #34d399;
-    /* Darker teal on hover */
+   
 }
 
 .user-list {
@@ -240,7 +239,7 @@ ul {
 
 .error-message {
     color: #ff0000;
-    /* Red color for error messages */
     margin-top: 8px;
-    /* Add some space at the top of the error message */
+
 }
+
