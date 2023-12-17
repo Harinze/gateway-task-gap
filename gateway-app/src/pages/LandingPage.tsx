@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import "../styles/index.css"; 
+import "../styles/index.css";
 import Header from "../components/header";
 
 interface Device {
@@ -17,18 +16,27 @@ interface UserData {
   ipAddress: string;
   status: boolean;
   devices: Device[];
+  lastStatusUpdate: number | null;
 }
 
-const ITEMS_PER_PAGE = 5; 
+const ITEMS_PER_PAGE = 5;
 
 const UserList: React.FC = () => {
   const [users, setUsers] = useState<UserData[]>([]);
   const [inputSerialNumber, setInputSerialNumber] = useState("");
   const [foundUser, setFoundUser] = useState<UserData | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
+
+  const formatDate = (createdAt: string) => {
+    const date = new Date(createdAt);
+    const options: Intl.DateTimeFormatOptions = {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    };
+    return date.toLocaleDateString(undefined, options);
+  };
 
   useEffect(() => {
     const fetchDataAndCache = async () => {
@@ -41,11 +49,18 @@ const UserList: React.FC = () => {
         }
         const data = await response.json();
 
-        console.log("Fetched data:", data);
-
         if (Array.isArray(data) && data.length > 0) {
-          localStorage.setItem("userListData", JSON.stringify(data));
-          setUsers(data);
+          // Initialize lastStatusUpdate with the current time for each user
+          const usersWithTimestamp = data.map((user: UserData) => ({
+            ...user,
+            lastStatusUpdate: new Date().getTime(),
+          }));
+
+          localStorage.setItem(
+            "userListData",
+            JSON.stringify(usersWithTimestamp)
+          );
+          setUsers(usersWithTimestamp);
         } else {
           console.error("API response is not the expected format:", data);
         }
@@ -54,13 +69,7 @@ const UserList: React.FC = () => {
       }
     };
 
-    fetchDataAndCache(); // Initial fetch
-
-    const intervalId = setInterval(fetchDataAndCache, 10 * 60 * 1000);
-
-    return () => {
-      clearInterval(intervalId);
-    };
+    fetchDataAndCache(); 
   }, []);
 
   const handleSearch = () => {
@@ -80,8 +89,18 @@ const UserList: React.FC = () => {
     );
 
     if (user) {
+      // Update status to true and set the lastStatusUpdate timestamp
+      const updatedUsers = users.map((currentUser) => {
+        if (currentUser.serialNumber === inputSerialNumber) {
+          currentUser.status = true;
+          currentUser.lastStatusUpdate = new Date().getTime();
+        }
+        return currentUser;
+      });
+
+      setUsers(updatedUsers);
       setFoundUser(user);
-      setError(null); 
+      setError(null);
     } else {
       setFoundUser(null);
       setError("User not found");
@@ -90,7 +109,7 @@ const UserList: React.FC = () => {
 
   const closeModal = () => {
     setFoundUser(null);
-    setError(null); 
+    setError(null);
   };
 
   const clearError = () => {
@@ -126,7 +145,7 @@ const UserList: React.FC = () => {
               placeholder="Enter Serial Number"
               value={inputSerialNumber}
               onChange={(e) => setInputSerialNumber(e.target.value)}
-              onClick={clearError} 
+              onClick={clearError}
             />
             <button onClick={handleSearch}>Search</button>
           </div>
@@ -151,19 +170,20 @@ const UserList: React.FC = () => {
                 <tr key={index}>
                   <td>{user.name}</td>
                   <td>{user.ipAddress}</td>
-                  <td>
-                    {user.status ? "Can't add device" : "Add more device(s)"}
-                  </td>
+                  <td>{user.status ? "Online" : "Offline"}</td>
                   <td>
                     <ul>
                       {user.devices.map((device, deviceIndex) => (
                         <li key={deviceIndex}>
-                          UID: {device.uid}, Vendor: {device.vendor}
+                          <div>
+                            <span>UID: {device.uid}</span>{" "}
+                            <span>Vendor: {device.vendor}</span>
+                          </div>
                         </li>
                       ))}
                     </ul>
                   </td>
-                  <td>{user.createdAt}</td>
+                  <td>{formatDate(user.createdAt)}</td>
                 </tr>
               ))}
             </tbody>
@@ -194,16 +214,16 @@ const UserList: React.FC = () => {
               <h2>User Details</h2>
               <p>Name: {foundUser.name}</p>
               <p>IP Address: {foundUser.ipAddress}</p>
-              <p>
-                Status:{" "}
-                {foundUser.status ? "Can't add device" : "Add more device(s)"}
-              </p>
-              <p>Created At: {foundUser.createdAt}</p>
+              <p>Serial Number: {foundUser.serialNumber}</p>
+              <p>Created At: {formatDate(foundUser.createdAt)}</p>
               <p>Devices:</p>
               <ul>
                 {foundUser.devices.map((device, deviceIndex) => (
                   <li key={deviceIndex}>
-                    UID: {device.uid}, Vendor: {device.vendor}
+                    <div>
+                      <span>UID: {device.uid}</span>
+                      <span>Vendor: {device.vendor}</span>
+                    </div>
                   </li>
                 ))}
               </ul>

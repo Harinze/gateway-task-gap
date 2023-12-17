@@ -34,20 +34,17 @@ const AddDevice = () => {
 
     try {
       if (values.serialNumber && values.uid && values.vendor) {
-        const response = await fetch(
-          "https://gateway-1yc2.onrender.com/savedevice",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              serialNumber: values.serialNumber,
-              uid: values.uid,
-              vendor: values.vendor,
-            }),
-          }
-        );
+        const response = await fetch("http://localhost:8050/savedevice", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            serialNumber: values.serialNumber,
+            uid: values.uid,
+            vendor: values.vendor,
+          }),
+        });
 
         const result = await response.json();
 
