@@ -39,7 +39,7 @@ const RegisterGateway: React.FC = () => {
     try {
 
       if (!values.serialNumber) {
-        toast.error("Please enter a serial number:lowercase");
+        toast.error("Please enter a serial number");
         setIsLoading(false);
         return;
       }

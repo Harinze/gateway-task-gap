@@ -6,7 +6,7 @@ import Header from "../components/header";
 interface Device {
   uid: number;
   vendor: string;
-  createdAt: string; 
+  createdAt: string;
 }
 
 interface UserData {
@@ -23,97 +23,90 @@ interface UserData {
 const ITEMS_PER_PAGE = 5;
 
 const UserList: React.FC = () => {
+  const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<UserData[]>([]);
   const [inputSerialNumber, setInputSerialNumber] = useState("");
   const [foundUser, setFoundUser] = useState<UserData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const formatDate = (createdAt: string) => {
-    const date = new Date(createdAt);
-    const options: Intl.DateTimeFormatOptions = {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    };
-    return date.toLocaleDateString(undefined, options);
-  };
-
-  const fetchDataAndCache = async () => {
-    try {
-      const response = await fetch(
-        "https://gateway-1yc2.onrender.com/getalldata"
-      );
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-
-      const items = await response.json();
-      
-      const data = [...items].reverse();
-
-      if (Array.isArray(data) && data.length > 0) {
-        // Initialize lastStatusUpdate with the current time for each user
-        const usersWithTimestamp = data.map((user: UserData) => ({
-          ...user,
-          lastStatusUpdate: new Date().getTime(),
-          devices: user.devices.map((device: Device) => ({
-            ...device,
-            createdAt: new Date().toISOString(), 
-          })),
-        }));
-
-        localStorage.setItem(
-          "userListData",
-          JSON.stringify(usersWithTimestamp)
-        );
-        setUsers(usersWithTimestamp);
-      } else {
-        console.error("API response is not the expected format:", data);
-      }
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-    }
-  };
-
   useEffect(() => {
+    const fetchDataAndCache = async () => {
+      try {
+        const response = await fetch(
+          "https://gateway-1yc2.onrender.com/getalldata"
+        );
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+
+        const items = await response.json();
+
+        const data = [...items].reverse();
+
+        if (Array.isArray(data) && data.length > 0) {
+          const usersWithTimestamp = data.map((user: UserData) => ({
+            ...user,
+            lastStatusUpdate: new Date().getTime(),
+            devices: user.devices.map((device: Device) => ({
+              ...device,
+              createdAt: new Date().toISOString(),
+            })),
+          }));
+
+          localStorage.setItem(
+            "userListData",
+            JSON.stringify(usersWithTimestamp)
+          );
+          setUsers(usersWithTimestamp);
+        } else {
+          console.error("API response is not the expected format:", data);
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        setError("Error fetching user data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchDataAndCache();
   }, []);
 
-  const handleSearch = () => {
-    if (!inputSerialNumber.trim()) {
-      setError("Please enter a serial number");
-      return;
-    }
+    const handleSearch = () => {
+      if (!inputSerialNumber.trim()) {
+        setError("Please enter a serial number");
+        return;
+      }
 
-    const storedData = localStorage.getItem("userListData");
-    const usersFromLocalStorage: UserData[] = storedData
-      ? JSON.parse(storedData)
-      : [];
+      const storedData = localStorage.getItem("userListData");
+      const usersFromLocalStorage: UserData[] = storedData
+        ? JSON.parse(storedData)
+        : [];
 
-    const user = usersFromLocalStorage.find(
-      (userData: { serialNumber: string }) =>
-        userData.serialNumber === inputSerialNumber
-    );
+      const user = usersFromLocalStorage.find(
+        (userData: { serialNumber: string }) =>
+          userData.serialNumber === inputSerialNumber
+      );
 
-    if (user) {
-      // Update status to true and set the lastStatusUpdate timestamp
-      const updatedUsers = users.map((currentUser) => {
-        if (currentUser.serialNumber === inputSerialNumber) {
-          currentUser.status = true;
-          currentUser.lastStatusUpdate = new Date().getTime();
-        }
-        return currentUser;
-      });
+      if (user) {
+        // Update status to true and set the lastStatusUpdate timestamp
+        const updatedUsers = users.map((currentUser) => {
+          if (currentUser.serialNumber === inputSerialNumber) {
+            currentUser.status = true;
+            currentUser.lastStatusUpdate = new Date().getTime();
+          }
+          return currentUser;
+        });
 
-      setUsers(updatedUsers);
-      setFoundUser(user);
-      setError(null);
-    } else {
-      setFoundUser(null);
-      setError("User not found");
-    }
-  };
+        setUsers(updatedUsers);
+        setFoundUser(user);
+        setError(null);
+      } else {
+        setFoundUser(null);
+        setError("Error or Serial Number:uppercased");
+      }
+    };
 
   const closeModal = () => {
     setFoundUser(null);
@@ -131,6 +124,16 @@ const UserList: React.FC = () => {
 
   const paginate = (pageNumber: number) => {
     setCurrentPage(pageNumber);
+  };
+
+  const formatDate = (createdAt: string) => {
+    const date = new Date(createdAt);
+    const options: Intl.DateTimeFormatOptions = {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    };
+    return date.toLocaleDateString(undefined, options);
   };
 
   return (
@@ -161,60 +164,64 @@ const UserList: React.FC = () => {
 
         {error && <p className="error-message">{error}</p>}
 
-        <div className="user-list">
-          <h2 className="user-list-item">All Users:</h2>
-          <table className="user-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>IP Address</th>
-                <th>Status</th>
-                <th>Devices</th>
-                <th>Created At</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentItems.map((user, index) => (
-                <tr key={index}>
-                  <td>{user.name}</td>
-                  <td>{user.ipAddress}</td>
-                  <td>{user.status ? "Online" : "Offline"}</td>
-                  <td>
-                    <ul>
-                      {user.devices.map((device, deviceIndex) => (
-                        <li key={deviceIndex}>
-                          <div>
-                            <span>UID: {device.uid}</span>{" "}
-                            <span>Vendor: {device.vendor}</span>{" "}
-                            <span>
-                              Created At: {formatDate(device.createdAt)}
-                            </span>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  </td>
-                  <td>{formatDate(user.createdAt)}</td>
+        {loading ? (
+          <h1>Loading...</h1>
+        ) : (
+          <div className="user-list">
+            <h2 className="user-list-item">All Users:</h2>
+            <table className="user-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>IP Address</th>
+                  <th>Status</th>
+                  <th>Devices</th>
+                  <th>Created At</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {currentItems.map((user, index) => (
+                  <tr key={index}>
+                    <td>{user.name}</td>
+                    <td>{user.ipAddress}</td>
+                    <td>{user.status ? "Online" : "Offline"}</td>
+                    <td>
+                      <ul>
+                        {user.devices.map((device, deviceIndex) => (
+                          <li key={deviceIndex}>
+                            <div>
+                              <span>UID: {device.uid}</span>{" "}
+                              <span>Vendor: {device.vendor}</span>{" "}
+                              <span>
+                                Created At: {formatDate(device.createdAt)}
+                              </span>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </td>
+                    <td>{formatDate(user.createdAt)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
 
-          {/* Pagination */}
-          <ul className="pagination">
-            {Array.from({
-              length: Math.ceil(users.length / ITEMS_PER_PAGE),
-            }).map((_, index) => (
-              <li
-                key={index}
-                onClick={() => paginate(index + 1)}
-                className={currentPage === index + 1 ? "active" : ""}
-              >
-                {index + 1}
-              </li>
-            ))}
-          </ul>
-        </div>
+            {/* Pagination */}
+            <ul className="pagination">
+              {Array.from({
+                length: Math.ceil(users.length / ITEMS_PER_PAGE),
+              }).map((_, index) => (
+                <li
+                  key={index}
+                  onClick={() => paginate(index + 1)}
+                  className={currentPage === index + 1 ? "active" : ""}
+                >
+                  {index + 1}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {foundUser && (
           <div className="modal-overlay" onClick={closeModal}>
@@ -248,5 +255,3 @@ const UserList: React.FC = () => {
 };
 
 export default UserList;
-
-
