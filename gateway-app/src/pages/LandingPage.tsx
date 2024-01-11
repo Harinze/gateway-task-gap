@@ -50,9 +50,11 @@ const UserList: React.FC = () => {
             lastStatusUpdate: new Date().getTime(),
             devices: user.devices.map((device: Device) => ({
               ...device,
-              createdAt: new Date().toISOString(),
+              // Use the existing createdAt value if it exists; otherwise, use the current date
+              createdAt: device.createdAt || new Date().toISOString(),
             })),
           }));
+
 
           localStorage.setItem(
             "userListData",
@@ -90,7 +92,6 @@ const UserList: React.FC = () => {
       );
 
       if (user) {
-        // Update status to true and set the lastStatusUpdate timestamp
         const updatedUsers = users.map((currentUser) => {
           if (currentUser.serialNumber === inputSerialNumber) {
             currentUser.status = true;
